@@ -79,8 +79,8 @@ tr:hover td{background:var(--bg2)}
 
 <div class="wrap">
   <div class="period-tabs" id="period-tabs">
-    <button class="period-tab active" data-p="mes" onclick="setPeriod(this,'mes')">Mes actual</button>
-    <button class="period-tab" data-p="3m" onclick="setPeriod(this,'3m')">3 meses</button>
+    <button class="period-tab" data-p="mes" onclick="setPeriod(this,'mes')">Mes actual</button>
+    <button class="period-tab active" data-p="3m" onclick="setPeriod(this,'3m')">3 meses</button>
     <button class="period-tab" data-p="6m" onclick="setPeriod(this,'6m')">6 meses</button>
     <button class="period-tab" data-p="anio" onclick="setPeriod(this,'anio')">Año</button>
   </div>
@@ -96,7 +96,7 @@ const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov'
 const ROLE_COLORS = {socio:'#185FA5',director:'#1D9E75',asesor:'#7F77DD','Socio referente':'#185FA5','Director Comercial':'#1D9E75','Asesor profesional':'#7F77DD','Contador':'#D85A30','Abogado':'#BA7517'};
 
 let allData = {socios:[], historial:[], pipeline:[]};
-let period = 'mes';
+let period = '3m';
 let vistaActual = 'todos';
 let chartInst = null;
 
