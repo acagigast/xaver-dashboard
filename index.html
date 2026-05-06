@@ -161,7 +161,7 @@ async function cargarDatos(){
       id: r.id,
       nombre: (r.fields['Nombre completo']||r.fields['Nombre']||'Sin nombre').trim(),
       tipo: r.fields['Tipo']||'Asesor',
-      meta: parseFloat(r.fields['Meta mensual (MXN)']||r.fields['Meta'])||5,
+      meta: parseFloat(r.fields['Meta Mensual']||r.fields['Meta mensual (MXN)']||r.fields['Meta']||0)/1000000||5,
       estatus: r.fields['Estatus']||'Activo',
     }));
 
@@ -324,16 +324,20 @@ function renderTodos(win){
     const conv = s.prospectos>0?Math.round(s.creditos/s.prospectos*100):0;
     const cumpl = s.total>0?Math.round(s.mesesCumplidos/s.total*100):0;
     const color = getColor(s.tipo);
+    const now = new Date();
+    const montoMes = Math.round(pipelineMonto(s.nombre, now.getMonth(), now.getFullYear())*10)/10;
+    const pctMeta = s.meta>0?Math.round(montoMes/s.meta*100):0;
+    const metaColor = pctMeta>=100?'ok':pctMeta>=60?'warn':'bad';
     html += `<div class="detail-card" onclick="verDetalle('${s.id}')">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <div class="avatar" style="background:${color}22;color:${color}">${initials(s.nombre)}</div>
         <div><div style="font-size:13px;font-weight:500">${s.nombre}</div><div style="font-size:11px;color:var(--sub)">${s.tipo}</div></div>
       </div>
-      <div class="kpi-row"><span class="k">Originación</span><span style="font-weight:600">${fmt(s.monto)}</span></div>
+      <div class="kpi-row"><span class="k">Monto colocado (mes)</span><span style="font-weight:600">${fmt(montoMes)}</span></div>
+      <div class="kpi-row"><span class="k">Meta mensual</span><span>${fmt(s.meta)}</span></div>
+      <div class="kpi-row"><span class="k">% Alcanzado</span><span class="pill ${metaColor}">${pctMeta}%</span></div>
       <div class="kpi-row"><span class="k">Prospectos</span><span>${s.prospectos}</span></div>
       <div class="kpi-row"><span class="k">Conversión</span><span class="pill ${conv>=25?'ok':conv>=15?'warn':'bad'}">${conv}%</span></div>
-      <div class="kpi-row"><span class="k">Mora</span><span class="pill ${s.mora>=4?'bad':s.mora>=3?'warn':'ok'}">${s.mora}%</span></div>
-      <div class="kpi-row"><span class="k">Metas cumplidas</span><span class="pill ${cumpl>=80?'ok':cumpl>=50?'warn':'bad'}">${s.mesesCumplidos}/${s.total}</span></div>
     </div>`;
   });
 
