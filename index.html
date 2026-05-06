@@ -159,7 +159,7 @@ async function cargarDatos(){
 
     allData.socios = socRec.map(r=>({
       id: r.id,
-      nombre: r.fields['Nombre completo']||r.fields['Nombre']||'Sin nombre',
+      nombre: (r.fields['Nombre completo']||r.fields['Nombre']||'Sin nombre').trim(),
       tipo: r.fields['Tipo']||'Asesor',
       meta: parseFloat(r.fields['Meta mensual (MXN)']||r.fields['Meta'])||5,
       estatus: r.fields['Estatus']||'Activo',
