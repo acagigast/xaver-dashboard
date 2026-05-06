@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xaver Capital · Dashboard Comercial</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#1B3A6B;--mblue:#2E75B6;--lblue:#D6E4F0;--green:#1A7A4A;--lgreen:#D6F0E4;--orange:#C05A00;--red:#A32D2D;--lred:#FCEBEB;--gray:#F5F6FA;--text:#1a1a1a;--sub:#6b7280;--border:#e5e7eb;--bg:#fff;--bg2:#f9fafb}
+@media(prefers-color-scheme:dark){:root{--text:#f0f0f0;--sub:#9ca3af;--border:#374151;--bg:#111827;--bg2:#1f2937;--gray:#1f2937;--lblue:#0c447c}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.topbar{background:var(--blue);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+.topbar .brand{font-size:16px;font-weight:600;letter-spacing:.01em}
+.topbar .sub{font-size:11px;opacity:.7;margin-top:2px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.controls select{font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;outline:none}
+.controls select option{background:#1B3A6B;color:#fff}
+.wrap{padding:16px 20px;max-width:900px;margin:0 auto}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
+.mcard{background:var(--bg2);border-radius:10px;padding:14px 16px}
+.mcard .lbl{font-size:11px;color:var(--sub);margin-bottom:5px}
+.mcard .val{font-size:22px;font-weight:600;color:var(--text)}
+.mcard .meta{font-size:11px;color:var(--sub);margin-top:3px}
+.sec{margin-bottom:1.5rem}
+.sec-title{font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ranking-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.bar-track{flex:1;background:var(--gray);border-radius:4px;height:22px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;color:#fff;transition:width .6s ease}
+.amount{width:72px;text-align:right;font-size:12px;color:var(--sub);flex-shrink:0}
+.rname{width:140px;flex-shrink:0}
+.rname .n{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rname .r{font-size:10px;color:var(--sub)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.ok{background:#D6F0E4;color:#1A7A4A}.warn{background:#FFF0E0;color:#C05A00}.bad{background:#FCEBEB;color:#A32D2D}
+@media(prefers-color-scheme:dark){.ok{background:#173404;color:#C0DD97}.warn{background:#412402;color:#FAC775}.bad{background:#501313;color:#F7C1C1}}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:1rem}
+.detail-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .2s}
+.detail-card:hover{border-color:var(--mblue)}
+.kpi-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)}
+.kpi-row:last-child{border-bottom:none}
+.kpi-row .k{color:var(--sub)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:7px 10px;color:var(--sub);font-weight:500;border-bottom:1px solid var(--border);font-size:11px;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg2)}
+.chart-wrap{position:relative;width:100%;height:220px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;font-size:11px;color:var(--sub)}
+.legend span{display:flex;align-items:center;gap:4px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.period-tabs{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.period-tab{padding:6px 14px;border-radius:999px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--bg);color:var(--text)}
+.period-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.back-btn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;margin-bottom:1rem;display:inline-flex;align-items:center;gap:6px}
+.back-btn:hover{background:var(--bg2)}
+.loading{text-align:center;padding:3rem;color:var(--sub);font-size:14px}
+.error-box{background:var(--lred);border:1px solid #F09595;border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:13px;color:var(--red)}
+.refresh-btn{font-size:11px;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer}
+.refresh-btn:hover{background:rgba(255,255,255,.2)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="brand">Xaver Capital · Originadores</div>
+    <div class="sub" id="sync-label">Cargando datos...</div>
+  </div>
+  <div class="controls">
+    <select id="sel-vista" onchange="cambiarVista()">
+      <option value="todos">Vista general (todos)</option>
+    </select>
+    <button class="refresh-btn" onclick="cargarDatos()">↻ Actualizar</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="period-tabs" id="period-tabs">
+    <button class="period-tab active" data-p="mes" onclick="setPeriod(this,'mes')">Mes actual</button>
+    <button class="period-tab" data-p="3m" onclick="setPeriod(this,'3m')">3 meses</button>
+    <button class="period-tab" data-p="6m" onclick="setPeriod(this,'6m')">6 meses</button>
+    <button class="period-tab" data-p="anio" onclick="setPeriod(this,'anio')">Año</button>
+  </div>
+  <div id="content"><div class="loading">Conectando con Airtable...</div></div>
+</div>
+
+<script>
+const BASE_ID = 'appuXv2CFEi3mrW5t';
+const TOKEN = 'patFe6SMG64gHoLiC.dd715fa19b6d0e066c3845b10fa8e6d892a9e82c319aeca781ecef2f974a121c';
+const HEADERS = {'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'};
+
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const ROLE_COLORS = {socio:'#185FA5',director:'#1D9E75',asesor:'#7F77DD','Socio referente':'#185FA5','Director Comercial':'#1D9E75','Asesor profesional':'#7F77DD','Contador':'#D85A30','Abogado':'#BA7517'};
+
+let allData = {socios:[], historial:[], pipeline:[]};
+let period = 'mes';
+let vistaActual = 'todos';
+let chartInst = null;
+
+function getColor(tipo){ return ROLE_COLORS[tipo]||'#888780'; }
+function initials(n){ return (n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function fmt(n){ return '$'+Number(n||0).toLocaleString('es-MX',{maximumFractionDigits:1})+'M'; }
+function pct(a,b){ return b>0?Math.round(a/b*100)+'%':'—'; }
+
+function parseMes(mesRaw){
+  if(!mesRaw) return {mes:null, anio:null};
+  const s = String(mesRaw).trim();
+  // Format: MM/YYYY
+  if(/^\d{1,2}\/\d{4}$/.test(s)){
+    const [m,y]=s.split('/');
+    return {mes:parseInt(m)-1, anio:parseInt(y)};
+  }
+  // Format: YYYY-MM or YYYY-MM-DD
+  if(/^\d{4}-\d{2}/.test(s)){
+    const parts=s.split('-');
+    return {mes:parseInt(parts[1])-1, anio:parseInt(parts[0])};
+  }
+  return {mes:null, anio:null};
+}
+
+function getWindow(){
+  const now = new Date();
+  const n = period==='mes'?1:period==='3m'?3:period==='6m'?6:12;
+  const win=[];
+  for(let i=n-1;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    win.push({m:d.getMonth(),y:d.getFullYear(),label:MESES[d.getMonth()]+' '+String(d.getFullYear()).slice(2)});
+  }
+  return win;
+}
+
+async function fetchTable(table){
+  let url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(table)}?pageSize=100`;
+  const res = await fetch(url,{headers:HEADERS});
+  if(!res.ok) throw new Error('Error '+res.status+' al leer tabla: '+table);
+  const data = await res.json();
+  let records = data.records||[];
+  let offset = data.offset;
+  while(offset){
+    const r2 = await fetch(url+'&offset='+offset,{headers:HEADERS});
+    const d2 = await r2.json();
+    records = records.concat(d2.records||[]);
+    offset = d2.offset;
+  }
+  return records;
+}
+
+async function cargarDatos(){
+  document.getElementById('sync-label').textContent = 'Actualizando...';
+  try {
+    const [socRec, histRec, pipRec] = await Promise.all([
+      fetchTable('Asesores'),
+      fetchTable('Historial Mensual'),
+      fetchTable('Pipeline'),
+    ]);
+
+    allData.socios = socRec.map(r=>({
+      id: r.id,
+      nombre: r.fields['Nombre completo']||r.fields['Nombre']||'Sin nombre',
+      tipo: r.fields['Tipo']||'Asesor',
+      meta: parseFloat(r.fields['Meta mensual (MXN)']||r.fields['Meta'])||5,
+      estatus: r.fields['Estatus']||'Activo',
+    }));
+
+    allData.historial = histRec.map(r=>{
+      const asesorRaw = r.fields['Asesor'];
+      const asesorNombre = Array.isArray(asesorRaw) ? null : (asesorRaw||'');
+      const asesorId = Array.isArray(asesorRaw) ? (asesorRaw[0]||null) : null;
+      const {mes, anio} = parseMes(r.fields['Mes']||r.fields['Mes / Año']||'');
+      return {
+        id: r.id,
+        oid: asesorId,
+        asesorNombre,
+        mes, anio,
+        prospectos: parseInt(r.fields['Prospectos referidos ese mes']||r.fields['Prospectos referidos']||0)||0,
+        creditos: parseInt(r.fields['Créditos cerrados ese mes']||r.fields['Creditos cerrados']||r.fields['Créditos cerrados']||0)||0,
+        monto: parseFloat(r.fields['Monto colocado ese mes (MXN)']||r.fields['Monto colocado']||0)/1000000||0,
+        mora: parseFloat(r.fields['Tasa de mora en su cartera (%)']||r.fields['Mora']||0)||0,
+        cumplioMeta: r.fields['¿Cumplió meta?']||false,
+        notas: r.fields['Notas del mes']||'',
+      };
+    });
+
+    allData.pipeline = pipRec.map(r=>({
+      id: r.id,
+      empresa: r.fields['Empresa / Razón social']||r.fields['Empresa']||'',
+      etapa: r.fields['Etapa']||'Nuevo',
+      monto: parseFloat(r.fields['Monto estimado (MXN)']||0)/1000000||0,
+      canal: r.fields['Canal de origen']||'',
+      asesorTexto: (r.fields['Asesor Texto']||'').trim(),
+      fechaCierre: r.fields['Fecha de cierre']||'',
+    }));
+
+    buildVistaSelect();
+    const now = new Date();
+    document.getElementById('sync-label').textContent = 'Actualizado '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+    render();
+  } catch(e){
+    document.getElementById('sync-label').textContent = 'Error de conexión';
+    document.getElementById('content').innerHTML = `<div class="error-box">Error al conectar con Airtable: ${e.message}</div>`;
+  }
+}
+
+function buildVistaSelect(){
+  const sel = document.getElementById('sel-vista');
+  sel.innerHTML = '<option value="todos">Vista general (todos)</option>';
+  allData.socios.forEach(s=>{
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.nombre+' (mi vista)';
+    sel.appendChild(o);
+  });
+  if(vistaActual !== 'todos' && !allData.socios.find(s=>s.id===vistaActual)) vistaActual='todos';
+  sel.value = vistaActual;
+}
+
+function cambiarVista(){ vistaActual=document.getElementById('sel-vista').value; render(); }
+function setPeriod(btn,p){ period=p; document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
+
+// Suma monto desde Pipeline (Etapa=Cerrado) por asesor y mes
+function pipelineMonto(nombre, mes, anio){
+  return allData.pipeline
+    .filter(p=>{
+      if(p.etapa !== 'Cerrado') return false;
+      if(!p.fechaCierre) return false;
+      const d = new Date(p.fechaCierre + 'T12:00:00');
+      return d.getMonth()===mes && d.getFullYear()===anio
+        && p.asesorTexto.toLowerCase()===nombre.trim().toLowerCase();
+    })
+    .reduce((a,p)=>a+p.monto, 0);
+}
+
+// Verifica si un registro de historial pertenece a un asesor
+function matchAsesor(h, oid, nombre){
+  if(h.oid && h.oid === oid) return true;
+  if(h.asesorNombre && nombre && h.asesorNombre.trim().toLowerCase() === nombre.trim().toLowerCase()) return true;
+  return false;
+}
+
+// Obtiene TODOS los registros del asesor en la ventana y los SUMA por mes
+function histForOid(oid, nombre, win){
+  return win.map(w=>{
+    const monto = Math.round(pipelineMonto(nombre, w.m, w.y)*100)/100;
+    const registros = allData.historial.filter(h => matchAsesor(h, oid, nombre) && h.mes===w.m && h.anio===w.y);
+    if(registros.length === 0){
+      return {oid, mes:w.m, anio:w.y, prospectos:0, creditos:0, monto, mora:0, cumplioMeta:false, notas:''};
+    }
+    return {
+      oid, mes:w.m, anio:w.y,
+      prospectos: registros.reduce((a,r)=>a+r.prospectos,0),
+      creditos: registros.reduce((a,r)=>a+r.creditos,0),
+      monto,
+      mora: registros.length ? Math.round(registros.reduce((a,r)=>a+r.mora,0)/registros.length*10)/10 : 0,
+      cumplioMeta: registros.some(r=>r.cumplioMeta),
+      notas: registros.map(r=>r.notas).filter(Boolean).join(', '),
+    };
+  });
+}
+
+function sumRows(rows){
+  return {
+    prospectos: rows.reduce((a,r)=>a+r.prospectos,0),
+    creditos: rows.reduce((a,r)=>a+r.creditos,0),
+    monto: Math.round(rows.reduce((a,r)=>a+r.monto,0)*10)/10,
+    mora: rows.length?Math.round(rows.reduce((a,r)=>a+r.mora,0)/rows.length*10)/10:0,
+    mesesCumplidos: rows.filter(r=>r.cumplioMeta).length,
+    total: rows.length
+  };
+}
+
+function render(){
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  const win = getWindow();
+  if(vistaActual==='todos') renderTodos(win);
+  else renderIndividual(vistaActual, win);
+}
+
+function renderTodos(win){
+  const stats = allData.socios.map(o=>{
+    const rows = histForOid(o.id, o.nombre, win);
+    return {...o,...sumRows(rows),rows};
+  });
+
+  const totalMonto = Math.round(stats.reduce((a,s)=>a+s.monto,0)*10)/10;
+  const totalProsp = stats.reduce((a,s)=>a+s.prospectos,0);
+  const totalCred = stats.reduce((a,s)=>a+s.creditos,0);
+  const moraAvg = stats.length?Math.round(stats.reduce((a,s)=>a+s.mora,0)/stats.length*10)/10:0;
+  const pipActivo = allData.pipeline.filter(p=>!['Cerrado','Rechazado'].includes(p.etapa));
+  const pipMonto = Math.round(pipActivo.reduce((a,p)=>a+p.monto,0)*10)/10;
+
+  const sorted = [...stats].sort((a,b)=>b.monto-a.monto);
+  const maxMonto = sorted[0]?.monto||1;
+
+  let html = `
+  <div class="mgrid">
+    <div class="mcard"><div class="lbl">Originación total</div><div class="val">${fmt(totalMonto)}</div><div class="meta">en el período</div></div>
+    <div class="mcard"><div class="lbl">Pipeline activo</div><div class="val">${fmt(pipMonto)}</div><div class="meta">${pipActivo.length} prospectos</div></div>
+    <div class="mcard"><div class="lbl">Prospectos</div><div class="val">${totalProsp}</div><div class="meta">Conversión ${pct(totalCred,totalProsp)}</div></div>
+    <div class="mcard"><div class="lbl">Mora promedio</div><div class="val" style="color:${moraAvg>=4?'var(--red)':moraAvg>=3?'var(--orange)':'inherit'}">${moraAvg}%</div></div>
+  </div>
+  <div class="sec"><div class="sec-title">Ranking por originación</div>`;
+
+  sorted.forEach((s,i)=>{
+    const pctBar = maxMonto>0?Math.round(s.monto/maxMonto*100):0;
+    const color = getColor(s.tipo);
+    html += `<div class="ranking-row" onclick="verDetalle('${s.id}')" style="cursor:pointer">
+      <div style="width:20px;text-align:center;font-size:11px;color:var(--sub)">${i+1}</div>
+      <div class="rname">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="avatar" style="background:${color}22;color:${color}">${initials(s.nombre)}</div>
+          <div><div class="n">${s.nombre}</div><div class="r">${s.tipo}</div></div>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(pctBar,3)}%;background:${color}">${pctBar>25?fmt(s.monto):''}</div></div>
+      <div class="amount">${pctBar<=25?fmt(s.monto):''}</div>
+    </div>`;
+  });
+
+  html += `</div><div class="sec"><div class="sec-title">Detalle por originador — toca para ver historial</div><div class="card-grid">`;
+
+  stats.forEach(s=>{
+    const conv = s.prospectos>0?Math.round(s.creditos/s.prospectos*100):0;
+    const cumpl = s.total>0?Math.round(s.mesesCumplidos/s.total*100):0;
+    const color = getColor(s.tipo);
+    html += `<div class="detail-card" onclick="verDetalle('${s.id}')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div class="avatar" style="background:${color}22;color:${color}">${initials(s.nombre)}</div>
+        <div><div style="font-size:13px;font-weight:500">${s.nombre}</div><div style="font-size:11px;color:var(--sub)">${s.tipo}</div></div>
+      </div>
+      <div class="kpi-row"><span class="k">Originación</span><span style="font-weight:600">${fmt(s.monto)}</span></div>
+      <div class="kpi-row"><span class="k">Prospectos</span><span>${s.prospectos}</span></div>
+      <div class="kpi-row"><span class="k">Conversión</span><span class="pill ${conv>=25?'ok':conv>=15?'warn':'bad'}">${conv}%</span></div>
+      <div class="kpi-row"><span class="k">Mora</span><span class="pill ${s.mora>=4?'bad':s.mora>=3?'warn':'ok'}">${s.mora}%</span></div>
+      <div class="kpi-row"><span class="k">Metas cumplidas</span><span class="pill ${cumpl>=80?'ok':cumpl>=50?'warn':'bad'}">${s.mesesCumplidos}/${s.total}</span></div>
+    </div>`;
+  });
+
+  html += `</div></div>
+  <div class="sec">
+    <div class="sec-title">Originación mensual — todos</div>
+    <div class="legend" id="legend-all"></div>
+    <div class="chart-wrap"><canvas id="chartAll"></canvas></div>
+  </div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  const legEl = document.getElementById('legend-all');
+  stats.forEach(s=>{ const color=getColor(s.tipo); legEl.innerHTML+=`<span><i style="background:${color}"></i>${s.nombre}</span>`; });
+
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  chartInst = new Chart(document.getElementById('chartAll'),{
+    type:'line',
+    data:{
+      labels:win.map(w=>w.label),
+      datasets:stats.map(s=>({
+        label:s.nombre,
+        data:s.rows.map(r=>r.monto),
+        borderColor:getColor(s.tipo),backgroundColor:getColor(s.tipo)+'33',borderWidth:2,tension:0.3,pointRadius:3,
+      }))
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>'$'+v+'M',font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}},
+      x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false}}}}
+  });
+}
+
+function verDetalle(oid){ vistaActual=oid; document.getElementById('sel-vista').value=oid; render(); }
+
+function renderIndividual(oid, win){
+  const o = allData.socios.find(x=>x.id===oid);
+  if(!o){vistaActual='todos';render();return;}
+  const rows = histForOid(oid, o.nombre, win);
+  const s = sumRows(rows);
+  const conv = s.prospectos>0?Math.round(s.creditos/s.prospectos*100):0;
+  const cumpl = s.total>0?Math.round(s.mesesCumplidos/s.total*100):0;
+  const color = getColor(o.tipo);
+
+  let html = `
+  <button class="back-btn" onclick="vistaActual='todos';document.getElementById('sel-vista').value='todos';render()">← Volver a todos</button>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;padding:14px;background:var(--bg2);border-radius:12px">
+    <div class="avatar" style="width:44px;height:44px;font-size:16px;background:${color}22;color:${color}">${initials(o.nombre)}</div>
+    <div>
+      <div style="font-size:16px;font-weight:600">${o.nombre}</div>
+      <div style="font-size:12px;color:var(--sub)">${o.tipo} · Meta: ${fmt(o.meta)} / mes</div>
+    </div>
+  </div>
+  <div class="mgrid">
+    <div class="mcard"><div class="lbl">Originación</div><div class="val">${fmt(s.monto)}</div></div>
+    <div class="mcard"><div class="lbl">Prospectos</div><div class="val">${s.prospectos}</div></div>
+    <div class="mcard"><div class="lbl">Conversión</div><div class="val"><span class="pill ${conv>=25?'ok':conv>=15?'warn':'bad'}">${conv}%</span></div></div>
+    <div class="mcard"><div class="lbl">Mora</div><div class="val"><span class="pill ${s.mora>=4?'bad':s.mora>=3?'warn':'ok'}">${s.mora}%</span></div></div>
+    <div class="mcard"><div class="lbl">Metas cumplidas</div><div class="val"><span class="pill ${cumpl>=80?'ok':cumpl>=50?'warn':'bad'}">${s.mesesCumplidos}/${s.total}</span></div></div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">Evolución mensual</div>
+    <div class="legend"><span><i style="background:${color}"></i>Originación ($M)</span><span><i style="background:#1D9E75"></i>Prospectos</span></div>
+    <div class="chart-wrap"><canvas id="chartInd"></canvas></div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">Historial mes a mes</div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Mes</th><th>Originación</th><th>Prospectos</th><th>Créditos</th><th>Conversión</th><th>Mora</th><th>Meta</th><th>Notas</th></tr></thead>
+      <tbody>`;
+
+  [...rows].reverse().forEach(r=>{
+    const cv=r.prospectos>0?Math.round(r.creditos/r.prospectos*100):0;
+    html+=`<tr>
+      <td>${MESES[r.mes]||''} ${r.anio||''}</td>
+      <td style="font-weight:600">${fmt(r.monto)}</td>
+      <td>${r.prospectos}</td><td>${r.creditos}</td>
+      <td><span class="pill ${cv>=25?'ok':cv>=15?'warn':'bad'}">${cv}%</span></td>
+      <td><span class="pill ${r.mora>=4?'bad':r.mora>=3?'warn':'ok'}">${r.mora}%</span></td>
+      <td><span class="pill ${r.cumplioMeta?'ok':'bad'}">${r.cumplioMeta?'Sí':'No'}</span></td>
+      <td style="color:var(--sub)">${r.notas||'—'}</td>
+    </tr>`;
+  });
+
+  html+=`</tbody></table></div></div>`;
+  document.getElementById('content').innerHTML=html;
+
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  chartInst=new Chart(document.getElementById('chartInd'),{
+    type:'bar',
+    data:{labels:win.map(w=>w.label),datasets:[
+      {label:'Originación',data:rows.map(r=>r.monto),backgroundColor:color+'88',borderColor:color,borderWidth:1.5,yAxisID:'y'},
+      {label:'Prospectos',type:'line',data:rows.map(r=>r.prospectos),borderColor:'#1D9E75',borderWidth:2,pointRadius:3,tension:0.3,backgroundColor:'transparent',yAxisID:'y2'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{position:'left',ticks:{callback:v=>'$'+v+'M',font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}},
+      y2:{position:'right',ticks:{font:{size:11}},grid:{display:false}},
+      x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false}}}}
+  });
+}
+
+cargarDatos();
+</script>
+</body>
+</html>
