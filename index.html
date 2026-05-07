@@ -232,6 +232,22 @@ function pipelineMonto(nombre, mes, anio){
     .reduce((a,p)=>a+p.monto, 0);
 }
 
+// Cuenta prospectos desde Pipeline (todos los registros del asesor)
+function pipelineProspectos(nombre){
+  return allData.pipeline.filter(p=>
+    p.asesorTexto.toLowerCase()===nombre.trim().toLowerCase() &&
+    p.etapa !== 'Rechazado'
+  ).length;
+}
+
+// Cuenta créditos cerrados desde Pipeline por asesor
+function pipelineCerrados(nombre){
+  return allData.pipeline.filter(p=>
+    p.asesorTexto.toLowerCase()===nombre.trim().toLowerCase() &&
+    p.etapa === 'Cerrado'
+  ).length;
+}
+
 // Verifica si un registro de historial pertenece a un asesor
 function matchAsesor(h, oid, nombre){
   if(h.oid && h.oid === oid) return true;
@@ -243,17 +259,16 @@ function matchAsesor(h, oid, nombre){
 function histForOid(oid, nombre, win){
   return win.map(w=>{
     const monto = Math.round(pipelineMonto(nombre, w.m, w.y)*100)/100;
+    const prospectos = pipelineProspectos(nombre);
+    const creditos = pipelineCerrados(nombre);
     const registros = allData.historial.filter(h => matchAsesor(h, oid, nombre) && h.mes===w.m && h.anio===w.y);
-    if(registros.length === 0){
-      return {oid, mes:w.m, anio:w.y, prospectos:0, creditos:0, monto, mora:0, cumplioMeta:false, notas:''};
-    }
     return {
       oid, mes:w.m, anio:w.y,
-      prospectos: registros.reduce((a,r)=>a+r.prospectos,0),
-      creditos: registros.reduce((a,r)=>a+r.creditos,0),
+      prospectos,
+      creditos,
       monto,
       mora: registros.length ? Math.round(registros.reduce((a,r)=>a+r.mora,0)/registros.length*10)/10 : 0,
-      cumplioMeta: registros.some(r=>r.cumplioMeta),
+      cumplioMeta: monto >= (allData.socios.find(s=>s.id===oid)?.meta||0),
       notas: registros.map(r=>r.notas).filter(Boolean).join(', '),
     };
   });
